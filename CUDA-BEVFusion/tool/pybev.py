@@ -25,9 +25,13 @@ import numpy as np
 import tensor
 import libpybev
 
-model = os.environ["DEBUG_MODEL"]
-precision = os.environ["DEBUG_PRECISION"]
-data  = os.environ["DEBUG_DATA"]
+# model = os.environ["DEBUG_MODEL"]
+# precision = os.environ["DEBUG_PRECISION"]
+# data  = os.environ["DEBUG_DATA"]
+
+model = "resnet50int8"
+precision = "int8"
+data  = "example-data"
 
 image_names = [
     "0-FRONT.jpg",
@@ -53,6 +57,7 @@ lidar2image = tensor.load(f"{data}/lidar2image.tensor")
 img_aug_matrix = tensor.load(f"{data}/img_aug_matrix.tensor")
 points = tensor.load(f"{data}/points.tensor")
 
+import pdb;pdb.set_trace()
 core = libpybev.load_bevfusion(
     f"model/{model}/build/camera.backbone.plan",
     f"model/{model}/build/camera.vtransform.plan",
@@ -62,12 +67,15 @@ core = libpybev.load_bevfusion(
     precision
 )
 
+import pdb;pdb.set_trace()
+
 if core is None:
     print("Failed to create core")
     exit(0)
 
 core.print()
 
+import pdb;pdb.set_trace()
 core.update(
     camera2lidar,
     camera_intrinsics,
@@ -75,6 +83,7 @@ core.update(
     img_aug_matrix
 )
 
+import pdb;pdb.set_trace()
 # while True:
 boxes = core.forward(images, points, with_normalization=True, with_dlpack=False)
 

@@ -22,16 +22,18 @@
 
 # export CUDA_VISIBLE_DEVICES=2
 
-export TensorRT_Lib=/path/to/TensorRT/lib
-export TensorRT_Inc=/path/to/TensorRT/include
-export TensorRT_Bin=/usr/src/tensorrt/bin
+export TensorRT_Root=/workspace/alex1_slam/tensorrt/TensorRT-8.5.1.7/
+export TensorRT_Lib=$TensorRT_Root/lib
+export TensorRT_Inc=$TensorRT_Root/include
+export TensorRT_Bin=$TensorRT_Root/bin
 
+export CUDA_HOME=/usr/local/cuda
 export CUDA_Lib=/usr/local/cuda/lib64
 export CUDA_Inc=/usr/local/cuda/include
 export CUDA_Bin=/usr/local/cuda/bin
 export CUDA_HOME=/usr/local/cuda
 
-export CUDNN_Lib=/path/to/cudnn/lib
+export CUDNN_Lib=/usr/local/cuda/lib64
 
 # export TensorRT_Lib=${TENSORRT_LIB}
 # export TensorRT_Inc=${TENSORRT_INCLUDE}
@@ -49,12 +51,13 @@ export CUDNN_Lib=/path/to/cudnn/lib
 export SPCONV_CUDA_VERSION=11.4
 
 # resnet50/resnet50int8/swint
-export DEBUG_MODEL=resnet50int8
+#export DEBUG_MODEL=resnet50int8
+export DEBUG_MODEL=test_ptq
 
 # fp16/int8
 export DEBUG_PRECISION=int8
 export DEBUG_DATA=example-data
-export USE_Python=OFF
+export USE_Python=ON
 
 # check the configuration path
 # clean the configuration status
@@ -102,6 +105,7 @@ if [ -f "tool/cudasm.sh" ]; then
     echo "Current CUDA SM: $cudasm"
 fi
 
-export CUDASM=$cudasm
+# export CUDASM=86 #for 4070
+export CUDASM=80 #for A100
 
 echo Configuration done!

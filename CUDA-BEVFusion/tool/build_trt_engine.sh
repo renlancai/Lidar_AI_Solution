@@ -120,7 +120,7 @@ compile_trt_model "fuser" "$trtexec_dynamic_flags" 2 1
 compile_trt_model "camera.vtransform" "$trtexec_fp16_flags" 1 1
 
 # for myelin layernorm head.bbox, may occur a tensorrt bug at layernorm fusion but faster
-compile_trt_model "head.bbox" "$trtexec_fp16_flags" 1 6
+compile_trt_model "head.bbox" "$trtexec_fp16_flags" 1 6 "--plugins=libcustom_layernorm.so"
 
 # for layernorm version head.bbox.onnx, accurate but slower
 # compile_trt_model "head.bbox.layernormplugin" "$trtexec_fp16_flags" 1 6 "--plugins=libcustom_layernorm.so"
