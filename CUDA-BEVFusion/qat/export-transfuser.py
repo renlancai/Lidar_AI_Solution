@@ -272,7 +272,7 @@ def replace_layernorm(model):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export transfusion to onnx file")
-    parser.add_argument("--ckpt", type=str, default="qat/ckpt/bevfusion_ptq.pth", help="Pretrain model")
+    parser.add_argument("--ckpt", type=str, default="model/test_ptq/re_bevfusion_ptq.pth", help="Pretrain model")
     parser.add_argument('--fp16', action= 'store_true')
     args = parser.parse_args()
     model = torch.load(args.ckpt).module
@@ -282,7 +282,8 @@ if __name__ == "__main__":
         suffix = "fp16"
         quantize.disable_quantization(model).apply()
     
-    save_root = f"qat/onnx_{suffix}"
+    # save_root = f"qat/onnx_{suffix}"
+    save_root = f"model/test_ptq/"
     os.makedirs(save_root, exist_ok=True)
 
     model.eval()

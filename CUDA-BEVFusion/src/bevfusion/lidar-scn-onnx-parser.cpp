@@ -27,6 +27,7 @@
 #include <fstream>
 #include <numeric>
 #include <unordered_map>
+#include <algorithm>
 
 namespace spconv{
 
@@ -93,7 +94,8 @@ static std::vector<int> get_attribute_as_intarray(const onnx::NodeProto& node, c
     auto ints = get_attribute(node, name).ints();
     std::vector<int> output(ints.size());
     for (int i = 0; i < ints.size(); ++i) 
-        output[i] = ints[i];
+        // output[i] = ints[i];
+        output[i] = ints.Get(i);
     return output;
 };
 

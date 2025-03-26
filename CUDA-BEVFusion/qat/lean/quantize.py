@@ -166,7 +166,7 @@ Quantize the camera branches
 def quantize_encoders_camera_branch(model_camera_branch):
     quantize_camera_backbone(model_camera_branch.backbone)  
     quantize_camera_neck(model_camera_branch.neck)
-    quantize_camera_vtransform(model_camera_branch.vtransform)
+    quantize_camera_vtransform(model_camera_branch.vtransform) # only for DepthLSS-like
     
     '''
     Make all inputs of each concat have the same scale
@@ -322,6 +322,7 @@ def calibrate_model(model : torch.nn.Module, dataloader, device, batch_processor
 
     def compute_amax(model, **kwargs):
         for name, module in model.named_modules():
+            print(f'doing {name}')
             if isinstance(module, quant_nn.TensorQuantizer):
                 if module._calibrator is not None:
                     if isinstance(module._calibrator, calib.MaxCalibrator):
@@ -361,6 +362,7 @@ def calibrate_model(model : torch.nn.Module, dataloader, device, batch_processor
                     module.enable()
 
     collect_stats(model, dataloader, device, num_batch=num_batch)
+    print("Already computed stats and begin to compute_amax!")
     compute_amax(model, method="mse")
 
 def print_quantizer_status(module):

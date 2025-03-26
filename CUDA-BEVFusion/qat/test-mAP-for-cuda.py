@@ -19,8 +19,15 @@ def single_cuda_test(data_loader):
     import os
     import sys
     import libpybev
-    model = os.environ["DEBUG_MODEL"]
-    precision = os.environ["DEBUG_PRECISION"]
+    
+    # model = "resnet50int8"
+    model = "test_ptq"
+    precision = "int8"
+
+
+    # model = os.environ["DEBUG_MODEL"]
+    # precision = os.environ["DEBUG_PRECISION"]
+    
     print(f"Model: {model}, Precision: {precision}")
     
     core = libpybev.load_bevfusion(
@@ -51,8 +58,10 @@ def single_cuda_test(data_loader):
             img_aug_matrix
         )
 
+        #todo: for C++, dump the data and load & wrap them to evaluate mAP
         boxes = core.forward(images, points, with_normalization=False)
         boxes = torch.from_numpy(boxes)
+        
         bbs = data["metas"].data[0][0]["box_type_3d"](boxes[:, :-2], 9)
         labels = boxes[:, -2].int()
         scores = boxes[:, -1]

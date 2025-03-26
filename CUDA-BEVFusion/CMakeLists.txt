@@ -22,7 +22,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(bevfusion)
 
-set(CMAKE_BUILD_PYTHON $ENV{USE_Python})
+#set(CMAKE_BUILD_PYTHON $ENV{USE_Python})
 set(CMAKE_BUILD_TYPE "Release")
 # set(CMAKE_BUILD_TYPE "Debug")
 set(arch ${CMAKE_HOST_SYSTEM_PROCESSOR})
@@ -44,9 +44,15 @@ else()
   set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++17 -O0 -g -DENABLE_TEXT_BACKEND_STB")
 endif()
 
+message(${CMAKE_CXX_FLAGS_RELEASE})
+
+
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} 
   -gencode arch=compute_$ENV{CUDASM},code=compute_$ENV{CUDASM}
 )
+
+message("hello world!")
+message(${Protobuf_INCLUDE_DIRS}) 
 
 include_directories(
   ${Protobuf_INCLUDE_DIRS}
@@ -129,6 +135,7 @@ target_link_libraries(custom_layernorm
 
 
 ########################## libpybev.so ################################
+set(CMAKE_BUILD_PYTHON "ON")
 if(${CMAKE_BUILD_PYTHON} STREQUAL "ON")
   cuda_add_library(pybev SHARED
     src/python.cpp

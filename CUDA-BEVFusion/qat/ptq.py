@@ -78,7 +78,7 @@ def load_model(cfg, checkpoint_path = None):
 
 def quantize_net(model):
     quantize.quantize_encoders_lidar_branch(model.encoders.lidar.backbone)    
-    quantize.quantize_encoders_camera_branch(model.encoders.camera)
+    quantize.quantize_encoders_camera_branch(model.encoders.camera) #only reserved for Res50
     quantize.replace_to_quantization_module(model.fuser)
     quantize.quantize_decoder(model.decoder)
     model.encoders.lidar.backbone = funcs.layer_fusion_bn(model.encoders.lidar.backbone)
@@ -96,7 +96,7 @@ def main():
     configs.load(args.config, recursive=True)
     cfg = Config(recursive_eval(configs), filename=args.config)
 
-    save_path = 'qat/ckpt/bevfusion_ptq.pth'
+    save_path = 'pretrained/qat/bevfusion_ptq.pth'
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
     # set random seeds

@@ -42,7 +42,10 @@ import lean.quantize as quantize
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Export bevfusion model")
-    parser.add_argument('--ckpt', type=str, default='qat/ckpt/bevfusion_ptq.pth')
+    
+    parser.add_argument('--ckpt', type=str, default='model/test_ptq/re_bevfusion_ptq.pth')
+    # parser.add_argument('--ckpt', type=str, default='pretrained/bevfusion-seg_depth.pth')
+    
     parser.add_argument('--fp16', action= 'store_true')
     args = parser.parse_args()
     return args
@@ -83,6 +86,10 @@ def main():
     args = parse_args()
 
     model  = torch.load(args.ckpt).module
+    print(type(model))
+    
+    # exit(1)
+    
     suffix = "int8"
     if args.fp16:
         suffix = "fp16"
@@ -98,9 +105,12 @@ def main():
 
     downsample_model = model.encoders.camera.vtransform.downsample
     downsample_model.cuda().eval()
-    downsample_in = torch.zeros(1, 80, 360, 360).cuda()
+    
+    downsample_in = torch.zeros(1, 80, 360, 360).cuda() # for det
+    # downsample_in = torch.zeros(1, 80, 256, 256).cuda() # for seg?
 
-    save_root = f"qat/onnx_{suffix}"
+    # save_root = f"model/test_ptq/seg_onnx_{suffix}"
+    save_root = f"model/test_ptq/"
     os.makedirs(save_root, exist_ok=True)
 
     with torch.no_grad():
