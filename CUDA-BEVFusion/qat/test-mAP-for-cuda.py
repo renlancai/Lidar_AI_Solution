@@ -21,8 +21,12 @@ def single_cuda_test(data_loader):
     import libpybev
     
     # model = "resnet50int8"
-    model = "test_ptq"
+    # model = "test_ptq"
+    model = "resnet50_noptq"
+    
+    
     precision = "int8"
+    # precision = "fp16"
 
 
     # model = os.environ["DEBUG_MODEL"]
@@ -38,6 +42,8 @@ def single_cuda_test(data_loader):
         f"model/{model}/build/head.bbox.plan",
         precision
     )
+    
+    # exit(1)
     
     results = []
     dataset = data_loader.dataset

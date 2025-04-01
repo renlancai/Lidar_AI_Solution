@@ -51,6 +51,7 @@ class CoreImplement : public Core {
       return false;
     }
 
+    
     camera_vtransform_ = camera::create_vtransform(param.camera_vtransform);
     if (camera_vtransform_ == nullptr) {
       printf("Failed to create camera vtransform.\n");
@@ -68,19 +69,19 @@ class CoreImplement : public Core {
       printf("Failed to create head transbbox.\n");
       return false;
     }
-
+    
     lidar_scn_ = lidar::create_scn(param.lidar_scn);
     if (lidar_scn_ == nullptr) {
       printf("Failed to create lidar scn.\n");
       return false;
-    }
+    } // bad?
 
     normalizer_ = camera::create_normalization(param.normalize);
     if (normalizer_ == nullptr) {
       printf("Failed to create normalizer.\n");
       return false;
     }
-
+    
     camera_depth_ = camera::create_depth(param.normalize.output_width, param.normalize.output_height, param.normalize.num_camera);
     if (camera_depth_ == nullptr) {
       printf("Failed to create depth.\n");

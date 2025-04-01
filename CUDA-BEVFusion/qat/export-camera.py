@@ -43,7 +43,7 @@ import lean.quantize as quantize
 def parse_args():
     parser = argparse.ArgumentParser(description="Export bevfusion model")
     
-    parser.add_argument('--ckpt', type=str, default='model/test_ptq/re_bevfusion_ptq.pth')
+    parser.add_argument('--ckpt', type=str, default='model/resnet50_noptq/bevfusion-det_whole.pth')
     # parser.add_argument('--ckpt', type=str, default='pretrained/bevfusion-seg_depth.pth')
     
     parser.add_argument('--fp16', action= 'store_true')
@@ -85,10 +85,9 @@ class SubclassCameraModule(nn.Module):
 def main():
     args = parse_args()
 
-    model  = torch.load(args.ckpt).module
+    # model  = torch.load(args.ckpt).module
+    model  = torch.load(args.ckpt)
     print(type(model))
-    
-    # exit(1)
     
     suffix = "int8"
     if args.fp16:
@@ -109,8 +108,7 @@ def main():
     downsample_in = torch.zeros(1, 80, 360, 360).cuda() # for det
     # downsample_in = torch.zeros(1, 80, 256, 256).cuda() # for seg?
 
-    # save_root = f"model/test_ptq/seg_onnx_{suffix}"
-    save_root = f"model/test_ptq/"
+    save_root = f"model/resnet50_noptq/"
     os.makedirs(save_root, exist_ok=True)
 
     with torch.no_grad():

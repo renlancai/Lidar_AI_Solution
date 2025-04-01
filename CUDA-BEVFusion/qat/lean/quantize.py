@@ -164,7 +164,7 @@ Quantize the camera branches
 
 '''
 def quantize_encoders_camera_branch(model_camera_branch):
-    quantize_camera_backbone(model_camera_branch.backbone)  
+    quantize_camera_backbone(model_camera_branch.backbone) # only for ResNet 50?  
     quantize_camera_neck(model_camera_branch.neck)
     quantize_camera_vtransform(model_camera_branch.vtransform) # only for DepthLSS-like
     
@@ -172,6 +172,7 @@ def quantize_encoders_camera_branch(model_camera_branch):
     Make all inputs of each concat have the same scale
     Improved performance when using TensorRT forward
     '''
+    # only for ResNet 50?
     major = model_camera_branch.backbone.layer3[0].conv1._input_quantizer
     model_camera_branch.neck.quant_concat1._input_quantizer = major
     model_camera_branch.neck.lateral_convs[0].conv._input_quantizer = major

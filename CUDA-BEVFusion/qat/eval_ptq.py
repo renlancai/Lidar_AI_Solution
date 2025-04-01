@@ -52,16 +52,14 @@ from mmdet3d.apis import single_gpu_test
 def parse_args():
     parser = argparse.ArgumentParser(description="Export bevfusion model")
     
-    parser.add_argument("--config", metavar="FILE", default="bevfusion/configs/nuscenes/seg/fusion-bev256d2-rs50_depth_lss.yaml", help="config file")
-    parser.add_argument('--ckpt', type=str, default='pretrained/bevfusion-seg_depth.pth')
-    # parser.add_argument('--ckpt', type=str, default='pretrained/qat/bevfusion_seg_ptq.pth')
-    parser.add_argument('--eval', type=str, default='map')
+    # parser.add_argument("--config", metavar="FILE", default="bevfusion/configs/nuscenes/seg/fusion-bev256d2-rs50_depth_lss.yaml", help="config file")
+    # parser.add_argument('--ckpt', type=str, default='pretrained/bevfusion-seg_depth.pth')
+    # parser.add_argument('--eval', type=str, default='map')
     
-    
-    # parser.add_argument("--config", metavar="FILE", default="bevfusion/configs/nuscenes/det/transfusion/secfpn/camera+lidar/resnet50/convfuser.yaml", help="config file")
-    # # parser.add_argument('--ckpt', type=str, default='model/resnet50/bevfusion-det.pth') # good
-    # parser.add_argument('--ckpt', type=str, default='pretrained/qat/bevfusion_ptq.pth') # nds = 0.0, desaster
-    # parser.add_argument('--eval', type=str, default='bbox')
+    parser.add_argument("--config", metavar="FILE", default="bevfusion/configs/nuscenes/det/transfusion/secfpn/camera+lidar/resnet50/convfuser.yaml", help="config file")
+    # parser.add_argument('--ckpt', type=str, default='model/resnet50/bevfusion-det.pth') # good
+    parser.add_argument('--ckpt', type=str, default='model/test_ptq/re_bevfusion_ptq.pth') # nds = 0.0, desaster
+    parser.add_argument('--eval', type=str, default='bbox')
     
     parser.add_argument(
         "--eval-options",
@@ -112,14 +110,10 @@ def main():
             for ds_cfg in cfg.data.test:
                 ds_cfg.pipeline = replace_ImageToTensor(ds_cfg.pipeline)
     
+    # model = build_model(cfg.model, test_cfg=cfg.get("test_cfg"))
+    # _ = load_checkpoint(model, args.ckpt, map_location="cpu")
     
-    
-    model = build_model(cfg.model, test_cfg=cfg.get("test_cfg"))
-    _ = load_checkpoint(model, args.ckpt, map_location="cpu")
-    
-    # model  = torch.load(args.ckpt).module
-    # model  = torch.load(args.ckpt)
-    
+    model  = torch.load(args.ckpt).module
     print(type(model))
     
     suffix = "int8"

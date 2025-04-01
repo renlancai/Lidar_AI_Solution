@@ -244,6 +244,30 @@ class BEVFusion {
     return py::array(py::dtype("float32"), output.shape, output.ptr());
   }
 
+  py::array forward_seg_without_normalization(py::array images, py::array points) {
+    auto t_points = convert_to(points);
+    auto t_images = convert_to(images);
+    t_images.to_device_();
+    t_images = t_images.to_half();
+
+    // lets say: we get segmentation mask, [-50.0, 50.0, 0.2], 4 * 500 * 500
+    auto bboxes =
+        core_->forward_no_normalize(t_images.ptr<nvtype::half>(), t_points.ptr<nvtype::half>(), t_points.size(0), stream_);
+
+    nv::Tensor output(std::vector<int>{static_cast<int>(bboxes.size()), 11}, nv::DataType::Float32, false);
+    for (size_t i = 0; i < bboxes.size(); ++i) {
+      auto& box = bboxes[i];
+      float* row = output.ptr<float>() + output.size(1) * i;
+      memcpy(row + 0, &box.position, sizeof(box.position));
+      memcpy(row + 3, &box.size, sizeof(box.size));
+      row[6] = box.z_rotation;
+      memcpy(row + 7, &box.velocity, sizeof(box.velocity));
+      row[9] = box.id;
+      row[10] = box.score;
+    }
+    return py::array(py::dtype("float32"), output.shape, output.ptr());
+  }
+
   py::array forward(py::object images, py::object points, bool with_normalization, bool with_dlpack){
     if(with_normalization){
       return this->forward_with_normalization(images, points);
@@ -255,11 +279,24 @@ class BEVFusion {
       }
     }
   }
+
+  py::array forward_seg(py::object images, py::object points, bool with_normalization, bool with_dlpack){
+    if(with_normalization){
+      return this->forward_with_normalization(images, points); // need update
+    }else{
+      if(with_dlpack){
+        return this->forward_without_normalization_dlpack(images, points); // need update
+      }else{
+        return this->forward_seg_without_normalization(images, points);
+      }
+    }
+  }
 };
 
 PYBIND11_MODULE(libpybev, m) {
   py::class_<BEVFusion, shared_ptr<BEVFusion>>(m, "BEVFusion")
       .def("forward", &BEVFusion::forward, py::arg("images"), py::arg("points"), py::arg("with_normalization")=true, py::arg("with_dlpack")=false)
+      .def("forward_seg", &BEVFusion::forward_seg, py::arg("images"), py::arg("points"), py::arg("with_normalization")=true, py::arg("with_dlpack")=false)
       .def("print", &BEVFusion::print)
       .def("update", &BEVFusion::update);
 

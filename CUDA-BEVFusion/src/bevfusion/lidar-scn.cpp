@@ -34,7 +34,10 @@ class SCNImplement : public SCN {
   bool init(const SCNParameter& param) {
     this->param_ = param;
     voxelization_ = create_voxelization(param_.voxelization);
-    if (voxelization_ == nullptr) return false;
+    if (voxelization_ == nullptr) {
+      printf("Failed to create lidar voxelization.\n");
+      return false;
+    }
 
     native_scn_ = spconv::load_engine_from_onnx(param_.model, static_cast<spconv::Precision>(param_.precision));
     return native_scn_ != nullptr;

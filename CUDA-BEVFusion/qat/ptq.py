@@ -33,7 +33,7 @@ import lean.quantize as quantize
 import lean.funcs as funcs
 from lean.train import qat_train
 
-from mmcv import Config
+from mmcv import Config, DictAction
 from torchpack.environ import auto_set_run_dir, set_run_dir
 from torchpack.utils.config import configs
 
@@ -42,7 +42,7 @@ from mmdet3d.models import build_model
 from mmdet3d.utils import get_root_logger, convert_sync_batchnorm, recursive_eval
 
 #Additions
-from mmcv.runner import  load_checkpoint,save_checkpoint
+from mmcv.runner import  load_checkpoint,save_checkpoint, get_dist_info
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.cnn import resnet
 from mmcv.cnn.utils.fuse_conv_bn import _fuse_conv_bn
@@ -90,6 +90,15 @@ def main():
     parser.add_argument("--config", metavar="FILE", default="bevfusion/configs/nuscenes/det/transfusion/secfpn/camera+lidar/resnet50/convfuser.yaml", help="config file")
     parser.add_argument("--ckpt", default="model/resnet50/bevfusion-det.pth", help="the checkpoint file to resume from")
     parser.add_argument("--calibrate_batch", type=int, default=300, help="calibrate batch")
+    parser.add_argument('--eval', type=str, default='bbox')
+    parser.add_argument(
+        "--eval-options",
+        nargs="+",
+        action=DictAction,
+        help="custom options for evaluation, the key-value pair in xxx=yyy "
+        "format will be kwargs for dataset.evaluate() function",
+    )
+    
     args = parser.parse_args()
 
     args.ptq_only = True
@@ -127,8 +136,11 @@ def main():
 
     #Create Model
     model = load_model(cfg, checkpoint_path = args.ckpt)
+    # torch.save(model, "model/resnet50/bevfusion-det_whole.pth")
+    
     model = quantize_net(model)
     model = fuse_conv_bn(model)
+    
     model = MMDataParallel(model, device_ids=[0])
     model.eval()
 
@@ -144,6 +156,42 @@ def main():
     print(f"Done due to ptq only! Save checkpoint to {save_path} 🤗")
     model.module.encoders.lidar.backbone = funcs.fuse_relu_only(model.module.encoders.lidar.backbone)
     torch.save(model, save_path)
+    
+    exit(1)
+
+    # try to evaluate the model, NDS = 0.0, why?
+    data_loader = build_dataloader(
+        dataset_test,
+        samples_per_gpu=1,
+        workers_per_gpu=1,
+        dist=False,
+        shuffle=False,
+    )
+    
+    outputs = None
+    from mmdet3d.apis import single_gpu_test
+    outputs = single_gpu_test(model, data_loader)
+    rank, _ = get_dist_info()
+    
+    if rank == 0:
+        # import pdb; pdb.set_trace()
+        kwargs = {} if args.eval_options is None else args.eval_options
+        
+        if args.eval:
+            eval_kwargs = cfg.get("evaluation", {}).copy()
+            # hard-code way to remove EvalHook args
+            for key in [
+                "interval",
+                "tmpdir",
+                "start",
+                "gpu_collect",
+                "save_best",
+                "rule",
+            ]:
+                eval_kwargs.pop(key, None)
+            eval_kwargs.update(dict(metric=args.eval, **kwargs))
+            print(dataset_test.evaluate(outputs, **eval_kwargs))
+    
     return
 
 if __name__ == "__main__":
