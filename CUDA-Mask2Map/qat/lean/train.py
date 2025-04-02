@@ -30,7 +30,7 @@ from mmcv.runner import (
     build_optimizer,
     build_runner,
 )
-from mmdet3d.runner import CustomEpochBasedRunner
+# from mmdet3d.runner import CustomEpochBasedRunner
 
 from mmdet3d.utils import get_root_logger
 from mmdet.core import DistEvalHook

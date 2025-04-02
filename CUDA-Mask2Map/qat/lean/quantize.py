@@ -184,6 +184,25 @@ def quantize_encoders_camera_branch(model_camera_branch):
     model_camera_branch.backbone.layer4[0].downsample[0]._input_quantizer = major
     
     
+'''
+Quantize the camera branches
+'''
+def quantize_encoders_camera_backbone_with_neck(camera_backbone, camera_neck):
+    quantize_camera_backbone(camera_backbone) # only for ResNet 50?  
+    quantize_camera_neck_fpn(camera_neck)
+    
+    '''
+    Make all inputs of each concat have the same scale
+    Improved performance when using TensorRT forward
+    '''
+    # only for ResNet 50
+    major = camera_backbone.layer3[0].conv1._input_quantizer
+    camera_backbone.layer3[0].downsample[0]._input_quantizer = major
+    
+    major = camera_backbone.layer4[0].conv1._input_quantizer
+    camera_backbone.layer4[0].downsample[0]._input_quantizer = major
+    
+    
 def transfer_torch_to_quantization(nninstance : torch.nn.Module, quantmodule):
 
     quant_instance = quantmodule.__new__(quantmodule)
@@ -211,7 +230,7 @@ def transfer_torch_to_quantization(nninstance : torch.nn.Module, quantmodule):
     return quant_instance
 
 def replace_to_quantization_module(model : torch.nn.Module):
-
+    # import pdb; pdb.set_trace()
     module_dict = {}
     for entry in quant_modules._DEFAULT_QUANT_MAP:
         module = getattr(entry.orig_mod, entry.mod_name)
@@ -220,13 +239,16 @@ def replace_to_quantization_module(model : torch.nn.Module):
     def recursive_and_replace_module(module, prefix=""):
         for name in module._modules:
             submodule = module._modules[name]
+            if submodule == None:
+                continue
             path      = name if prefix == "" else prefix + "." + name
             recursive_and_replace_module(submodule, path)
 
             submodule_id = id(type(submodule))
             if submodule_id in module_dict:  
                 module._modules[name] = transfer_torch_to_quantization(submodule, module_dict[submodule_id])
-
+    
+    # import pdb; pdb.set_trace()
     recursive_and_replace_module(model)
     
 def quantize_camera_vtransform(model_camera_vtreansform):
@@ -235,6 +257,10 @@ def quantize_camera_vtransform(model_camera_vtreansform):
     
 def quantize_decoder(model_decoder):
     replace_to_quantization_module(model_decoder) 
+    
+def quantize_mask2map_decoder(model_decoder):
+    # import pdb; pdb.set_trace()
+    replace_to_quantization_module(model_decoder)
 
 class hook_generalized_lss_fpn_forward:
     def __init__(self, obj):
@@ -275,6 +301,12 @@ def quantize_camera_neck(model_camera_neck):
     model_camera_neck.quant_concat0   =  QuantConcat()
     model_camera_neck.quant_concat1   =  QuantConcat()
     model_camera_neck.forward = hook_generalized_lss_fpn_forward(model_camera_neck)
+    
+def quantize_camera_neck_fpn(model_camera_neck):  
+    replace_to_quantization_module(model_camera_neck)    
+    # model_camera_neck.quant_concat0   =  QuantConcat()
+    # model_camera_neck.quant_concat1   =  QuantConcat()
+    # model_camera_neck.forward = hook_generalized_lss_fpn_forward(model_camera_neck)
     
         
 class hook_bottleneck_forward:
@@ -346,10 +378,14 @@ def calibrate_model(model : torch.nn.Module, dataloader, device, batch_processor
                     module.disable()
 
         iter_count = 0 
+        prog_bar = mmcv.ProgressBar(num_batch)
         for data in tqdm(data_loader, total=num_batch, desc="Collect stats for calibrating"):
+        # for i, data in enumerate(data_loader):
             with torch.no_grad():
+                # import pdb; pdb.set_trace()
                 result = model(return_loss=False, rescale=True, **data)
             iter_count += 1
+            prog_bar.update()
             if iter_count >num_batch:
                 break
 

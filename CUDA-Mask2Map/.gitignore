@@ -10,7 +10,6 @@ __pycache__
 /example-data
 /src/test
 /qat/onnx_int8
-bevfusion
 data*
 *nohup*
 pretrained*
